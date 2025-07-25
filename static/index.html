@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Playlist Recommender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .color-selection {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .color-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .color-pair {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .color-pair:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(29, 185, 84, 0.3);
+        }
+
+        .color-option {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-option.selected {
+            border-color: #1DB954;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(29, 185, 84, 0.4);
+        }
+
+        .color-option::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .color-option.selected::after {
+            opacity: 1;
+        }
+
+        .color-option.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #1DB954;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .color-name {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(29, 185, 84, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #dee2e6;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1DB954;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .mood-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .mood-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .mood-intensity {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .playlists-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .playlist-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .playlist-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .playlist-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .playlist-info {
+            padding: 20px;
+        }
+
+        .playlist-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .playlist-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .playlist-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .playlist-link {
+            display: inline-block;
+            background: #1DB954;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .playlist-link:hover {
+            background: #1ed760;
+            transform: translateY(-2px);
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .color-pair {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px;
+            }
+            
+            .color-option {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Spotify Playlist Recommender</h1>
+            <p>Choose colors that match your mood and discover perfect playlists</p>
+        </div>
+
+        <div class="main-content">
+            <div class="color-selection">
+                <h2 class="section-title">Select Colors That Match Your Mood</h2>
+                <div class="color-grid" id="colorGrid">
+                    <!-- Colors will be populated by JavaScript -->
+                </div>
+                <div class="color-name" id="selectedColorName"></div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" id="getRecommendations" disabled>
+                    Get Playlist Recommendations
+                </button>
+                <button class="btn btn-secondary" id="clearSelection">
+                    Clear Selection
+                </button>
+            </div>
+
+            <div class="error" id="errorMessage"></div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Finding perfect playlists for your mood...</p>
+            </div>
+
+            <div class="results" id="results">
+                <div class="mood-info" id="moodInfo"></div>
+                <h2 class="section-title">Recommended Playlists</h2>
+                <div class="playlists-grid" id="playlistsGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Color pairs from the API
+        const colorPairs = [
+            {
+                first: { rgb: [100, 100, 255], name: "Medium Blue" },
+                second: { rgb: [255, 100, 100], name: "Medium Red" }
+            },
+            {
+                first: { rgb: [255, 255, 100], name: "Medium Yellow" },
+                second: { rgb: [100, 255, 100], name: "Medium Green" }
+            },
+            {
+                first: { rgb: [128, 0, 128], name: "Medium Purple" },
+                second: { rgb: [255, 165, 0], name: "Medium Orange" }
+            },
+            {
+                first: { rgb: [255, 0, 255], name: "Medium Magenta" },
+                second: { rgb: [0, 255, 255], name: "Medium Cyan" }
+            },
+            {
+                first: { rgb: [0, 0, 255], name: "Vivid Blue" },
+                second: { rgb: [128, 128, 255], name: "Muted Blue" }
+            },
+            {
+                first: { rgb: [128, 255, 128], name: "Muted Green" },
+                second: { rgb: [0, 255, 0], name: "Vivid Green" }
+            },
+            {
+                first: { rgb: [255, 0, 0], name: "Vivid Red" },
+                second: { rgb: [255, 128, 128], name: "Muted Red" }
+            },
+            {
+                first: { rgb: [255, 200, 128], name: "Muted Orange" },
+                second: { rgb: [255, 165, 0], name: "Vivid Orange" }
+            },
+            {
+                first: { rgb: [173, 216, 230], name: "Light Blue" },
+                second: { rgb: [0, 0, 139], name: "Dark Blue" }
+            },
+            {
+                first: { rgb: [0, 100, 0], name: "Dark Green" },
+                second: { rgb: [144, 238, 144], name: "Light Green" }
+            },
+            {
+                first: { rgb: [255, 99, 71], name: "Light Red" },
+                second: { rgb: [139, 0, 0], name: "Dark Red" }
+            },
+            {
+                first: { rgb: [204, 204, 0], name: "Dark Yellow" },
+                second: { rgb: [255, 255, 224], name: "Light Yellow" }
+            }
+        ];
+
+        let selectedColors = [];
+
+        function initializeColorGrid() {
+            const colorGrid = document.getElementById('colorGrid');
+            
+            colorPairs.forEach((pair, pairIndex) => {
+                // Create container for the pair
+                const pairContainer = document.createElement('div');
+                pairContainer.className = 'color-pair';
+                pairContainer.style.display = 'flex';
+                pairContainer.style.gap = '10px';
+                pairContainer.style.alignItems = 'center';
+                
+                // Create first color option
+                const firstColorDiv = document.createElement('div');
+                firstColorDiv.className = 'color-option';
+                firstColorDiv.style.backgroundColor = `rgb(${pair.first.rgb.join(',')})`;
+                firstColorDiv.dataset.color = JSON.stringify(pair.first);
+                firstColorDiv.dataset.pairIndex = pairIndex;
+                firstColorDiv.dataset.position = 'first';
+                
+                firstColorDiv.addEventListener('click', () => selectColorFromPair(pairIndex, 'first', pair.first));
+                
+                const firstNameDiv = document.createElement('div');
+                firstNameDiv.className = 'color-name';
+                firstNameDiv.textContent = pair.first.name;
+                
+                const firstContainer = document.createElement('div');
+                firstContainer.appendChild(firstColorDiv);
+                firstContainer.appendChild(firstNameDiv);
+                
+                // Create "VS" text
+                const vsDiv = document.createElement('div');
+                vsDiv.textContent = 'VS';
+                vsDiv.style.fontWeight = 'bold';
+                vsDiv.style.color = '#666';
+                vsDiv.style.fontSize = '0.9rem';
+                
+                // Create second color option
+                const secondColorDiv = document.createElement('div');
+                secondColorDiv.className = 'color-option';
+                secondColorDiv.style.backgroundColor = `rgb(${pair.second.rgb.join(',')})`;
+                secondColorDiv.dataset.color = JSON.stringify(pair.second);
+                secondColorDiv.dataset.pairIndex = pairIndex;
+                secondColorDiv.dataset.position = 'second';
+                
+                secondColorDiv.addEventListener('click', () => selectColorFromPair(pairIndex, 'second', pair.second));
+                
+                const secondNameDiv = document.createElement('div');
+                secondNameDiv.className = 'color-name';
+                secondNameDiv.textContent = pair.second.name;
+                
+                const secondContainer = document.createElement('div');
+                secondContainer.appendChild(secondColorDiv);
+                secondContainer.appendChild(secondNameDiv);
+                
+                // Add all to pair container
+                pairContainer.appendChild(firstContainer);
+                pairContainer.appendChild(vsDiv);
+                pairContainer.appendChild(secondContainer);
+                
+                colorGrid.appendChild(pairContainer);
+            });
+        }
+
+        function selectColorFromPair(pairIndex, position, color) {
+            // Remove any existing selection from this pair
+            const pairElements = document.querySelectorAll(`[data-pair-index="${pairIndex}"]`);
+            pairElements.forEach(el => el.classList.remove('selected'));
+            
+            // Remove this pair's selection from selectedColors array
+            selectedColors = selectedColors.filter(c => c.pairIndex !== pairIndex);
+            
+            // Add new selection
+            const selectedElement = document.querySelector(`[data-pair-index="${pairIndex}"][data-position="${position}"]`);
+            selectedElement.classList.add('selected');
+            
+            selectedColors.push({
+                color: color.rgb.join(','),
+                colorName: color.name,
+                timestamp: Date.now(),
+                pairIndex: pairIndex
+            });
+            
+            updateUI();
+        }
+
+        function updateUI() {
+            const getRecommendationsBtn = document.getElementById('getRecommendations');
+            getRecommendationsBtn.disabled = selectedColors.length === 0;
+            
+            const selectedColorName = document.getElementById('selectedColorName');
+            if (selectedColors.length > 0) {
+                selectedColorName.textContent = `Selected: ${selectedColors.map(c => c.colorName).join(', ')}`;
+            } else {
+                selectedColorName.textContent = '';
+            }
+        }
+
+        function clearSelection() {
+            selectedColors = [];
+            document.querySelectorAll('.color-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            updateUI();
+            hideResults();
+        }
+
+        function hideResults() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        async function getRecommendations() {
+            if (selectedColors.length === 0) return;
+            
+            hideResults();
+            document.getElementById('loading').style.display = 'block';
+            
+            const payload = {
+                selectedColours: selectedColors,
+                userValence: 0.5,
+                userEnergy: 0.7,
+                userDominance: 0.7,
+                timeOfDay: new Date().getHours(),
+                timeZone: new Date().getTimezoneOffset(),
+                eventType: 0
+            };
+            
+            try {
+                const response = await fetch('/api/recommendations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                displayResults(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to get recommendations. Please try again later.');
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('loading').style.display = 'none';
+            
+            // Display mood info
+            const moodInfo = document.getElementById('moodInfo');
+            moodInfo.innerHTML = `
+                <h3>Your Mood: ${data.moodText}</h3>
+                <div class="mood-intensity">Intensity: ${Math.round(data.moodIntensity * 100)}%</div>
+            `;
+            
+            // Display playlists
+            const playlistsGrid = document.getElementById('playlistsGrid');
+            playlistsGrid.innerHTML = '';
+            
+            data.recommendedPlaylists.forEach(playlist => {
+                const playlistCard = document.createElement('div');
+                playlistCard.className = 'playlist-card';
+                
+                playlistCard.innerHTML = `
+                    <img src="${playlist.image}" alt="${playlist.name}" class="playlist-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjBmMGYwIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K'">
+                    <div class="playlist-info">
+                        <div class="playlist-name">${playlist.name}</div>
+                        <div class="playlist-description">${playlist.description}</div>
+                        <div class="playlist-stats">
+                            <span>${playlist.followers.toLocaleString()} followers</span>
+                            <span>${playlist.tracksCount} tracks</span>
+                        </div>
+                        <a href="${playlist.url}" target="_blank" class="playlist-link">
+                            Open in Spotify
+                        </a>
+                    </div>
+                `;
+                
+                playlistsGrid.appendChild(playlistCard);
+            });
+            
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Event listeners
+        document.getElementById('getRecommendations').addEventListener('click', getRecommendations);
+        document.getElementById('clearSelection').addEventListener('click', clearSelection);
+
+        // Initialize the app
+        initializeColorGrid();
+    </script>
+</body>
+</html>
+
