@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -82,6 +83,71 @@
         .color-pair:hover {
             background: rgba(255, 255, 255, 0.8);
             border-color: rgba(29, 185, 84, 0.3);
+        }
+
+        .mood-controls {
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid rgba(29, 185, 84, 0.1);
+        }
+
+        .mood-sliders {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .mood-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .mood-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1DB954;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .mood-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1DB954;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
         }
 
         .color-option {
@@ -208,8 +274,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .results {
@@ -319,27 +390,27 @@
             .header h1 {
                 font-size: 2rem;
             }
-            
+
             .main-content {
                 padding: 20px;
             }
-            
+
             .color-pair {
                 flex-direction: column;
                 gap: 15px;
                 padding: 20px;
             }
-            
+
             .color-option {
                 width: 60px;
                 height: 60px;
             }
-            
+
             .controls {
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .btn {
                 width: 100%;
                 max-width: 300px;
@@ -347,6 +418,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -361,6 +433,36 @@
                     <!-- Colors will be populated by JavaScript -->
                 </div>
                 <div class="color-name" id="selectedColorName"></div>
+            </div>
+
+            <div class="mood-controls">
+                <h2 class="section-title">Fine-tune Your Mood (Optional)</h2>
+                <div class="mood-sliders">
+                    <div class="slider-group">
+                        <label for="valenceSlider">😊 Happiness Level: <span id="valenceValue">50%</span></label>
+                        <input type="range" id="valenceSlider" min="10" max="90" value="50" class="mood-slider">
+                        <div class="slider-labels">
+                            <span>😞 Unhappy</span>
+                            <span>😄 Happy</span>
+                        </div>
+                    </div>
+                    <div class="slider-group">
+                        <label for="energySlider">⚡ Energy Level: <span id="energyValue">70%</span></label>
+                        <input type="range" id="energySlider" min="10" max="90" value="70" class="mood-slider">
+                        <div class="slider-labels">
+                            <span>😴 Tired</span>
+                            <span>🚀 Energetic</span>
+                        </div>
+                    </div>
+                    <div class="slider-group">
+                        <label for="dominanceSlider">💪 Control Level: <span id="dominanceValue">70%</span></label>
+                        <input type="range" id="dominanceSlider" min="10" max="90" value="70" class="mood-slider">
+                        <div class="slider-labels">
+                            <span>🍂 Powerless</span>
+                            <span>👑 In Control</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="controls">
@@ -441,10 +543,43 @@
         ];
 
         let selectedColors = [];
+        let moodSettings = {
+            valence: 0.5,
+            energy: 0.7,
+            dominance: 0.7
+        };
+
+        function initializeMoodSliders() {
+            const valenceSlider = document.getElementById('valenceSlider');
+            const energySlider = document.getElementById('energySlider');
+            const dominanceSlider = document.getElementById('dominanceSlider');
+
+            const valenceValue = document.getElementById('valenceValue');
+            const energyValue = document.getElementById('energyValue');
+            const dominanceValue = document.getElementById('dominanceValue');
+
+            valenceSlider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                moodSettings.valence = value / 100;
+                valenceValue.textContent = value + '%';
+            });
+
+            energySlider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                moodSettings.energy = value / 100;
+                energyValue.textContent = value + '%';
+            });
+
+            dominanceSlider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                moodSettings.dominance = value / 100;
+                dominanceValue.textContent = value + '%';
+            });
+        }
 
         function initializeColorGrid() {
             const colorGrid = document.getElementById('colorGrid');
-            
+
             colorPairs.forEach((pair, pairIndex) => {
                 // Create container for the pair
                 const pairContainer = document.createElement('div');
@@ -452,7 +587,7 @@
                 pairContainer.style.display = 'flex';
                 pairContainer.style.gap = '10px';
                 pairContainer.style.alignItems = 'center';
-                
+
                 // Create first color option
                 const firstColorDiv = document.createElement('div');
                 firstColorDiv.className = 'color-option';
@@ -460,24 +595,24 @@
                 firstColorDiv.dataset.color = JSON.stringify(pair.first);
                 firstColorDiv.dataset.pairIndex = pairIndex;
                 firstColorDiv.dataset.position = 'first';
-                
+
                 firstColorDiv.addEventListener('click', () => selectColorFromPair(pairIndex, 'first', pair.first));
-                
+
                 const firstNameDiv = document.createElement('div');
                 firstNameDiv.className = 'color-name';
                 firstNameDiv.textContent = pair.first.name;
-                
+
                 const firstContainer = document.createElement('div');
                 firstContainer.appendChild(firstColorDiv);
                 firstContainer.appendChild(firstNameDiv);
-                
+
                 // Create "VS" text
                 const vsDiv = document.createElement('div');
                 vsDiv.textContent = 'VS';
                 vsDiv.style.fontWeight = 'bold';
                 vsDiv.style.color = '#666';
                 vsDiv.style.fontSize = '0.9rem';
-                
+
                 // Create second color option
                 const secondColorDiv = document.createElement('div');
                 secondColorDiv.className = 'color-option';
@@ -485,22 +620,22 @@
                 secondColorDiv.dataset.color = JSON.stringify(pair.second);
                 secondColorDiv.dataset.pairIndex = pairIndex;
                 secondColorDiv.dataset.position = 'second';
-                
+
                 secondColorDiv.addEventListener('click', () => selectColorFromPair(pairIndex, 'second', pair.second));
-                
+
                 const secondNameDiv = document.createElement('div');
                 secondNameDiv.className = 'color-name';
                 secondNameDiv.textContent = pair.second.name;
-                
+
                 const secondContainer = document.createElement('div');
                 secondContainer.appendChild(secondColorDiv);
                 secondContainer.appendChild(secondNameDiv);
-                
+
                 // Add all to pair container
                 pairContainer.appendChild(firstContainer);
                 pairContainer.appendChild(vsDiv);
                 pairContainer.appendChild(secondContainer);
-                
+
                 colorGrid.appendChild(pairContainer);
             });
         }
@@ -509,28 +644,28 @@
             // Remove any existing selection from this pair
             const pairElements = document.querySelectorAll(`[data-pair-index="${pairIndex}"]`);
             pairElements.forEach(el => el.classList.remove('selected'));
-            
+
             // Remove this pair's selection from selectedColors array
             selectedColors = selectedColors.filter(c => c.pairIndex !== pairIndex);
-            
+
             // Add new selection
             const selectedElement = document.querySelector(`[data-pair-index="${pairIndex}"][data-position="${position}"]`);
             selectedElement.classList.add('selected');
-            
+
             selectedColors.push({
                 color: color.rgb.join(','),
                 colorName: color.name,
                 timestamp: Date.now(),
                 pairIndex: pairIndex
             });
-            
+
             updateUI();
         }
 
         function updateUI() {
             const getRecommendationsBtn = document.getElementById('getRecommendations');
             getRecommendationsBtn.disabled = selectedColors.length === 0;
-            
+
             const selectedColorName = document.getElementById('selectedColorName');
             if (selectedColors.length > 0) {
                 selectedColorName.textContent = `Selected: ${selectedColors.map(c => c.colorName).join(', ')}`;
@@ -563,20 +698,20 @@
 
         async function getRecommendations() {
             if (selectedColors.length === 0) return;
-            
+
             hideResults();
             document.getElementById('loading').style.display = 'block';
-            
+
             const payload = {
                 selectedColours: selectedColors,
-                userValence: 0.5,
-                userEnergy: 0.7,
-                userDominance: 0.7,
+                userValence: moodSettings.valence,
+                userEnergy: moodSettings.energy,
+                userDominance: moodSettings.dominance,
                 timeOfDay: new Date().getHours(),
                 timeZone: new Date().getTimezoneOffset(),
                 eventType: 0
             };
-            
+
             try {
                 const response = await fetch('/api/recommendations', {
                     method: 'POST',
@@ -585,14 +720,14 @@
                     },
                     body: JSON.stringify(payload)
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const data = await response.json();
                 displayResults(data);
-                
+
             } catch (error) {
                 console.error('Error:', error);
                 showError('Failed to get recommendations. Please try again later.');
@@ -601,22 +736,22 @@
 
         function displayResults(data) {
             document.getElementById('loading').style.display = 'none';
-            
+
             // Display mood info
             const moodInfo = document.getElementById('moodInfo');
             moodInfo.innerHTML = `
                 <h3>Your Mood: ${data.moodText}</h3>
                 <div class="mood-intensity">Intensity: ${Math.round(data.moodIntensity * 100)}%</div>
             `;
-            
+
             // Display playlists
             const playlistsGrid = document.getElementById('playlistsGrid');
             playlistsGrid.innerHTML = '';
-            
+
             data.recommendedPlaylists.forEach(playlist => {
                 const playlistCard = document.createElement('div');
                 playlistCard.className = 'playlist-card';
-                
+
                 playlistCard.innerHTML = `
                     <img src="${playlist.image}" alt="${playlist.name}" class="playlist-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjBmMGYwIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K'">
                     <div class="playlist-info">
@@ -631,10 +766,10 @@
                         </a>
                     </div>
                 `;
-                
+
                 playlistsGrid.appendChild(playlistCard);
             });
-            
+
             document.getElementById('results').style.display = 'block';
         }
 
@@ -644,7 +779,8 @@
 
         // Initialize the app
         initializeColorGrid();
+        initializeMoodSliders();
     </script>
 </body>
-</html>
 
+</html>
